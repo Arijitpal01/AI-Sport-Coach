@@ -1,5 +1,6 @@
 import cv2
 import mediapipe as mp
+from pathlib import Path
 
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
@@ -22,9 +23,11 @@ class PoseAnalyzer:
 
         self.target_fps = target_fps
 
-        model_path = (
-            "backend/models/trained_models/"
-            "pose_landmarker_full.task"
+        model_path = str(
+            Path(__file__).resolve().parents[1]
+            / "models"
+            / "trained_models"
+            / "pose_landmarker_full.task"
         )
 
         base_options = python.BaseOptions(
