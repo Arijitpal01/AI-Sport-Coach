@@ -8,6 +8,7 @@ from fastapi import (
 
 import os
 import uuid
+from pathlib import Path
 
 from backend.vision.pose_analyzer import PoseAnalyzer
 
@@ -40,7 +41,7 @@ from backend.services.progress_service import (
 
 router = APIRouter()
 
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR = str(Path(__file__).resolve().parents[2] / "uploads")
 
 os.makedirs(
     UPLOAD_DIR,
