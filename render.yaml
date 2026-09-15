@@ -3,4 +3,9 @@ services:
     name: ai-sports-coach
     runtime: docker
     dockerfilePath: ./Dockerfile
+    envVars:
+      - key: ENABLE_OBJECT_DETECTION
+        value: "false"
+      - key: CORS_ORIGINS
+        value: https://arijitpal01.github.io,http://localhost:5000,http://127.0.0.1:5000
     healthCheckPath: /health

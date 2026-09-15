@@ -1,3 +1,5 @@
+import os
+
 import cv2
 
 from backend.vision.pose_analyzer import PoseAnalyzer
@@ -78,64 +80,39 @@ def analyze_football_video(
     # 2. YOLO BALL DETECTION
     # --------------------------------------------------
 
-    detector = ObjectDetector()
+    ball_detection_frames = []
+    if os.getenv("ENABLE_OBJECT_DETECTION", "false").lower() == "true":
+        detector = ObjectDetector()
+        cap = cv2.VideoCapture(video_path)
 
-    cap = cv2.VideoCapture(
-        video_path
-    )
+        if not cap.isOpened():
+            raise ValueError(
+                "Could not open video for object detection."
+            )
 
-    if not cap.isOpened():
-        raise ValueError(
-            "Could not open video for object detection."
-        )
+        original_fps = cap.get(cv2.CAP_PROP_FPS)
+        if original_fps <= 0:
+            cap.release()
+            raise ValueError("Invalid video FPS.")
 
-    original_fps = cap.get(
-        cv2.CAP_PROP_FPS
-    )
+        frame_interval = max(1, round(original_fps / target_fps))
+        frame_number = 0
 
-    if original_fps <= 0:
+        while True:
+            success, frame = cap.read()
+            if not success:
+                break
+
+            frame_number += 1
+            if frame_number % frame_interval != 0:
+                continue
+
+            ball_detection_frames.append({
+                "frame": frame_number,
+                "detections": detector.detect_sports_ball(frame),
+            })
 
         cap.release()
-
-        raise ValueError(
-            "Invalid video FPS."
-        )
-
-    frame_interval = max(
-        1,
-        round(
-            original_fps / target_fps
-        )
-    )
-
-    frame_number = 0
-
-    ball_detection_frames = []
-
-    while True:
-
-        success, frame = cap.read()
-
-        if not success:
-            break
-
-        frame_number += 1
-
-        if frame_number % frame_interval != 0:
-            continue
-
-        detections = detector.detect_sports_ball(
-            frame
-        )
-
-        ball_detection_frames.append(
-            {
-                "frame": frame_number,
-                "detections": detections
-            }
-        )
-
-    cap.release()
 
     # --------------------------------------------------
     # 3. BASE FOOTBALL FEATURES
