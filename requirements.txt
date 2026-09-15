@@ -3,7 +3,7 @@ gunicorn
 uvicorn[standard]
 python-multipart
 sqlalchemy
-opencv-python
+opencv-python-headless
 mediapipe
 ultralytics
 numpy<2
