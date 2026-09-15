@@ -30,6 +30,32 @@ from backend.sports.football import (
 )
 
 
+def _fallback_football_analysis(error):
+    analysis = analyze_football({}, {}, {}, {}, {})
+    analysis["analysis_mode"] = "degraded"
+    analysis["warning"] = (
+        "Pose analysis is unavailable in the current server runtime. "
+        "A baseline result was returned; redeploy the Render Docker "
+        "configuration to enable full video analysis."
+    )
+    analysis["runtime_error"] = str(error)
+    analysis["pose_quality"] = {
+        "total_video_frames": 0,
+        "processed_frames": 0,
+        "pose_detected_frames": 0,
+        "detection_rate": 0.0,
+        "original_fps": 0.0,
+        "analysis_fps": 0,
+    }
+    analysis["object_detection_quality"] = {
+        "detector": "disabled",
+        "ball_frames_tested": 0,
+        "ball_frames_detected": 0,
+        "ball_detection_rate": 0.0,
+    }
+    return analysis
+
+
 def analyze_football_video(
     video_path,
     target_fps=5
@@ -54,9 +80,14 @@ def analyze_football_video(
     # 1. POSE ANALYSIS
     # --------------------------------------------------
 
-    pose_analyzer = PoseAnalyzer(
-        target_fps=target_fps
-    )
+    try:
+        pose_analyzer = PoseAnalyzer(
+            target_fps=target_fps
+        )
+    except OSError as error:
+        if "libGLESv2.so.2" not in str(error):
+            raise
+        return _fallback_football_analysis(error)
 
     try:
         pose_result = pose_analyzer.analyze_video(
